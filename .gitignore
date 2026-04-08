@@ -28,7 +28,12 @@ yarn-error.*
 
 # macOS
 .DS_Store
+._*
 *.pem
+
+# local font variants not used by the app
+assets/fonts/MoveSans-Light.ttf
+assets/fonts/MoveSans-Medium.ttf
 
 # local env files
 .env*.local

@@ -1,75 +1,64 @@
-import React from "react";
+import React, { type ComponentProps } from "react";
 import { View, TouchableOpacity } from "react-native";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Text from "../ui/AppText";
 
 export type TopAppBarVariant = "logo" | "title" | "back";
+type TopAppBarIconName = ComponentProps<typeof Ionicons>["name"];
 
 type Props = {
   variant?: TopAppBarVariant;
-  /** variant="title" | "back" 일 때 표시될 제목 */
   title?: string;
   onLeftPress?: () => void;
   onRightPress?: () => void;
-  /** 우측 아이콘 (기본값: 알림 🔔) */
-  rightIcon?: string;
+  rightIcon?: TopAppBarIconName;
 };
 
-/**
- * TopAppBar
- * - variant="logo": 햄버거 | Popble 로고 | 아이콘
- * - variant="title": 햄버거 | 텍스트 제목 | 아이콘
- * - variant="back": ← | 텍스트 제목 | 아이콘
- */
 export default function TopAppBar({
   variant = "logo",
   title,
   onLeftPress,
   onRightPress,
-  rightIcon = "🔔",
+  rightIcon = "notifications-outline",
 }: Props) {
   const isBack = variant === "back";
 
   return (
     <View
-      className="absolute top-0 left-0 right-0 z-10"
+      className="absolute left-0 right-0 top-0 z-10"
       style={{ backgroundColor: "rgba(252,248,252,0.85)" }}
     >
       <SafeAreaView edges={["top"]}>
-        <View className="flex-row items-center justify-between px-6 h-16">
-          {/* 왼쪽: 햄버거 or 뒤로가기 */}
+        <View className="h-16 flex-row items-center justify-between px-6">
           <TouchableOpacity
+            activeOpacity={0.85}
             onPress={onLeftPress}
-            className="w-10 h-10 items-center justify-center"
+            className="h-10 w-10 items-center justify-center rounded-full"
           >
-            {isBack ? (
-              <Text className="text-primary text-xl font-bold">←</Text>
-            ) : (
-              <View className="gap-1">
-                <View className="w-5 h-0.5 bg-primary" />
-                <View className="w-5 h-0.5 bg-primary" />
-                <View className="w-5 h-0.5 bg-primary" />
-              </View>
-            )}
+            <Ionicons
+              name={isBack ? "chevron-back" : "menu-outline"}
+              size={24}
+              color="#844d74"
+            />
           </TouchableOpacity>
 
-          {/* 중앙: 로고 or 제목 */}
           {variant === "logo" ? (
-            <Text className="text-2xl font-brand italic text-primary tracking-tight">
+            <Text className="font-brand text-2xl italic tracking-tight text-primary">
               Popble
             </Text>
           ) : (
-            <Text className="text-xl font-semibold text-primary tracking-tight">
+            <Text className="text-xl font-semibold tracking-tight text-primary">
               {title}
             </Text>
           )}
 
-          {/* 오른쪽: 아이콘 */}
           <TouchableOpacity
+            activeOpacity={0.85}
             onPress={onRightPress}
-            className="w-10 h-10 items-center justify-center"
+            className="h-10 w-10 items-center justify-center rounded-full"
           >
-            <Text className="text-xl">{rightIcon}</Text>
+            <Ionicons name={rightIcon} size={22} color="#844d74" />
           </TouchableOpacity>
         </View>
       </SafeAreaView>

@@ -27,8 +27,8 @@ export default function FAB({
 
   return (
     <Animated.View
-      className="absolute z-20"
-      style={[{ bottom, right }, animStyle]}
+      className="z-20"
+      style={[{ position: "absolute", bottom, right }, animStyle]}
     >
       <TouchableOpacity
         onPress={onPress}
@@ -43,7 +43,9 @@ export default function FAB({
           elevation: 10,
         }}
       >
-        <Text className="text-white text-2xl font-light">{icon}</Text>
+        <Text className="text-white text-[28px] leading-[30px] font-light">
+          {icon}
+        </Text>
       </TouchableOpacity>
     </Animated.View>
   );
