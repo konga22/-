@@ -178,7 +178,10 @@ export default function SideMenu({
             elevation: 18,
           }}
         >
-          <SafeAreaView className="flex-1 bg-surface" edges={["top", "bottom", "left"]}>
+          <SafeAreaView
+            className="flex-1 bg-surface"
+            edges={["top", "bottom", "left"]}
+          >
             <View className="flex-row items-start gap-3 px-5 pb-5 pt-4">
               <View className="flex-1 pr-1">
                 <Text className="text-[24px] font-semibold leading-8 text-primary">

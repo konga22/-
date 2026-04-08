@@ -30,14 +30,14 @@ export default function BottomNavBar({
         <View
           className="flex-row items-center justify-between rounded-tl-[32px] rounded-tr-[32px] px-2 pb-3 pt-3"
           style={{
-            backgroundColor: "rgba(252,248,252,0.92)",
+            backgroundColor: "rgba(255,255,255,0.98)",
             borderTopWidth: 1,
-            borderTopColor: "rgba(132,77,116,0.08)",
-            shadowColor: "rgba(51,50,56,0.06)",
+            borderTopColor: "rgba(15,23,42,0.06)",
+            shadowColor: "rgba(15,23,42,0.05)",
             shadowOffset: { width: 0, height: -4 },
             shadowOpacity: 1,
-            shadowRadius: 40,
-            elevation: 12,
+            shadowRadius: 24,
+            elevation: 10,
           }}
         >
           {TAB_CONFIG.map((tab) => (

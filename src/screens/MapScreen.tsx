@@ -13,7 +13,7 @@ export default function MapScreen({
   const [activeChip, setActiveChip] = useState("성수동");
 
   return (
-    <View className="flex-1 bg-surface-secondary">
+    <View className="flex-1 bg-surface">
       <StatusBar
         barStyle="dark-content"
         backgroundColor="transparent"

@@ -3,6 +3,7 @@ import { View, TouchableOpacity } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Text from "../ui/AppText";
+import BrandLogo from "../ui/BrandLogo";
 
 export type TopAppBarVariant = "logo" | "title" | "back";
 type TopAppBarIconName = ComponentProps<typeof Ionicons>["name"];
@@ -27,7 +28,11 @@ export default function TopAppBar({
   return (
     <View
       className="absolute left-0 right-0 top-0 z-10"
-      style={{ backgroundColor: "rgba(252,248,252,0.85)" }}
+      style={{
+        backgroundColor: "#ffffff",
+        borderBottomWidth: 1,
+        borderBottomColor: "rgba(15,23,42,0.04)",
+      }}
     >
       <SafeAreaView edges={["top"]}>
         <View className="h-16 flex-row items-center justify-between px-6">
@@ -44,9 +49,7 @@ export default function TopAppBar({
           </TouchableOpacity>
 
           {variant === "logo" ? (
-            <Text className="font-brand text-2xl italic tracking-tight text-primary">
-              Popble
-            </Text>
+            <BrandLogo size="sm" />
           ) : (
             <Text className="text-xl font-semibold tracking-tight text-primary">
               {title}

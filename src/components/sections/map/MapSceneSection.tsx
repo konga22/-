@@ -17,14 +17,14 @@ type Props = {
 
 export default function MapSceneSection({ activeChip, onSelectChip }: Props) {
   return (
-    <View className="flex-1 bg-surface-secondary">
+    <View className="flex-1 bg-surface">
       <Image
         source={{ uri: IMG_MAP_BG }}
         className="absolute inset-0 w-full h-full opacity-40"
         resizeMode="cover"
         style={{ width: "100%", height: "100%" }}
       />
-      <View className="absolute inset-0 bg-surface-secondary opacity-60" />
+      <View className="absolute inset-0 bg-surface opacity-60" />
 
       <MapFilterChips active={activeChip} onSelect={onSelectChip} />
       <MapPin label="성수 디올" top={294} left={97} />
