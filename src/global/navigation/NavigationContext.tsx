@@ -2,7 +2,6 @@ import React, {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
   useState,
   type PropsWithChildren,
@@ -18,19 +17,11 @@ import {
   getRouteHref,
   type AppRoute,
   type AppScreenProps,
-  type TabTransitionDirection,
 } from "./appRoutes";
-import { TAB_CONFIG, type TabName } from "./tabConfig";
+import type { TabName } from "./tabConfig";
 import { TabEventProvider } from "./TabEventContext";
 
 const AppNavigationContext = createContext<AppScreenProps | null>(null);
-
-function getTabIndex(tabName: TabName) {
-  return Math.max(
-    TAB_CONFIG.findIndex((tab) => tab.id === tabName),
-    0
-  );
-}
 
 export function useAppScreenProps() {
   const context = useContext(AppNavigationContext);
@@ -48,53 +39,36 @@ function AppNavigationProvider({ children }: PropsWithChildren) {
   const activeRoute = getRouteFromPathname(pathname);
   const activeTab = getActiveTab(activeRoute);
   const [menuVisible, setMenuVisible] = useState(false);
-  const [tabTransitionDirection, setTabTransitionDirection] =
-    useState<TabTransitionDirection>("none");
-
-  useEffect(() => {
-    if (!TAB_CONFIG.some((tab) => tab.id === activeRoute)) {
-      setTabTransitionDirection("none");
-    }
-  }, [activeRoute]);
 
   const navigateToRoute = useCallback(
     (nextRoute: AppRoute) => {
-      if (!TAB_CONFIG.some((tab) => tab.id === nextRoute)) {
-        setTabTransitionDirection("none");
+      setMenuVisible(false);
+
+      if (nextRoute === activeRoute) {
+        return;
       }
 
       router.replace(getRouteHref(nextRoute));
-      setMenuVisible(false);
     },
-    [router]
+    [activeRoute, router]
   );
 
   const handleTabPress = useCallback(
     (nextTab: TabName) => {
-      const currentIndex = getTabIndex(activeTab);
-      const nextIndex = getTabIndex(nextTab);
-      const nextDirection =
-        nextIndex > currentIndex
-          ? "right"
-          : nextIndex < currentIndex
-            ? "left"
-            : "none";
-
-      setTabTransitionDirection(nextDirection);
       navigateToRoute(nextTab);
     },
-    [activeTab, navigateToRoute]
+    [navigateToRoute]
   );
 
   const screenProps = useMemo<AppScreenProps>(
     () => ({
       activeTab,
-      tabTransitionDirection,
+      tabTransitionDirection: "none",
       onOpenMenu: () => setMenuVisible(true),
       onNavigate: navigateToRoute,
       onTabPress: handleTabPress,
     }),
-    [activeTab, handleTabPress, navigateToRoute, tabTransitionDirection]
+    [activeTab, handleTabPress, navigateToRoute]
   );
 
   return (

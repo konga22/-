@@ -15,6 +15,7 @@ type TabEventContextValue = {
   clearEvent: () => void;
   dismissEvent: () => void;
   message: string;
+  resetEvent: () => void;
   status: TabEventStatus;
   targetTab: TabName;
 };
@@ -35,16 +36,21 @@ export function TabEventProvider({ children }: PropsWithChildren) {
     setStatus("cleared");
   }, []);
 
+  const resetEvent = useCallback(() => {
+    setStatus("bubble");
+  }, []);
+
   const value = useMemo<TabEventContextValue>(
     () => ({
       actionLabel: "이벤트 보기",
       clearEvent,
       dismissEvent,
       message: "오늘 볼 만한 팝업 이벤트가 있어요.",
+      resetEvent,
       status,
       targetTab: EVENT_TARGET_TAB,
     }),
-    [clearEvent, dismissEvent, status]
+    [clearEvent, dismissEvent, resetEvent, status]
   );
 
   return (

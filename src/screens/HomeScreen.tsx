@@ -16,6 +16,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import BottomNavBar from "../components/common/BottomNavBar";
 import Text from "../components/ui/AppText";
 import { COLORS } from "../constants/colors";
+import { DEBUG_FLAGS } from "../constants/debug";
 import {
   getHomeFeed,
   type HomeSectionKey,
@@ -35,10 +36,6 @@ type HomeScreenProps = AppScreenProps & {
 
 type HomeHeaderProps = {
   onOpenSearch: () => void;
-};
-
-type HomePullBackdropProps = {
-  image: string;
 };
 
 type HomeRefreshIndicatorProps = {
@@ -97,7 +94,8 @@ type ClosingDigestProps = {
 };
 
 const HOME_BOTTOM_NAV_OFFSET = 0;
-const HOME_REFRESH_DURATION_MS = 700;
+const HOME_REFRESH_DURATION_MS = 1100;
+const HOME_SCROLL_CONTENT_CONTAINER_STYLE = { paddingBottom: 132 } as const;
 
 function HomeRefreshIndicator({
   pullY,
@@ -152,17 +150,12 @@ function HomeRefreshIndicator({
   );
 }
 
-function HomePullBackdrop({ image }: HomePullBackdropProps) {
+function HomePullBackdrop() {
   return (
-    <View pointerEvents="none" className="absolute left-0 right-0 top-0 h-[620px]">
-      <ImageBackground
-        source={{ uri: image }}
-        className="h-full w-full bg-heading"
-        resizeMode="cover"
-      >
-        <View className="absolute inset-0 bg-black/45" />
-      </ImageBackground>
-    </View>
+    <View
+      pointerEvents="none"
+      className="absolute left-0 right-0 top-0 h-[620px] bg-heading"
+    />
   );
 }
 
@@ -709,7 +702,11 @@ export default function HomeScreen({
     togglePopupReminder,
     toggleSavedPopup,
   } = useHomeFeature();
-  const { status: tabEventStatus, targetTab: tabEventTargetTab } = useTabEvent();
+  const {
+    resetEvent,
+    status: tabEventStatus,
+    targetTab: tabEventTargetTab,
+  } = useTabEvent();
   const isTabEventBubbleVisible =
     tabEventStatus === "bubble" && activeTab !== tabEventTargetTab;
 
@@ -751,10 +748,14 @@ export default function HomeScreen({
 
     setRefreshing(true);
     refreshTimeoutRef.current = setTimeout(() => {
+      if (DEBUG_FLAGS.resetTabEventOnHomeRefresh) {
+        resetEvent();
+      }
+
       setRefreshing(false);
       refreshTimeoutRef.current = null;
     }, HOME_REFRESH_DURATION_MS);
-  }, []);
+  }, [resetEvent]);
 
   const handleHomeScroll = useMemo(
     () =>
@@ -790,7 +791,7 @@ export default function HomeScreen({
 
   return (
     <View className="flex-1 bg-heading">
-      <HomePullBackdrop image={heroPopup.image} />
+      <HomePullBackdrop />
       <HomeRefreshIndicator
         pullY={pullY}
         refreshing={refreshing}
@@ -804,7 +805,7 @@ export default function HomeScreen({
 
       <Animated.ScrollView
         className="flex-1 bg-transparent"
-        contentContainerStyle={{ paddingBottom: 132 }}
+        contentContainerStyle={HOME_SCROLL_CONTENT_CONTAINER_STYLE}
         onScroll={handleHomeScroll}
         refreshControl={
           <RefreshControl
