@@ -1,7 +1,10 @@
-import React from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  Animated,
+  Easing,
   Image,
   ImageBackground,
+  RefreshControl,
   ScrollView,
   StatusBar,
   TouchableOpacity,
@@ -13,6 +16,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import BottomNavBar from "../components/common/BottomNavBar";
 import Text from "../components/ui/AppText";
 import { COLORS } from "../constants/colors";
+import { DEBUG_FLAGS } from "../constants/debug";
 import {
   getHomeFeed,
   type HomeSectionKey,
@@ -21,6 +25,7 @@ import {
 } from "../features/home/homeData";
 import { useHomeFeature } from "../features/home/HomeFeatureContext";
 import type { AppScreenProps } from "../global/navigation/appRoutes";
+import { useTabEvent } from "../global/navigation/TabEventContext";
 
 type HomeScreenProps = AppScreenProps & {
   onOpenPopup: (popupId: string) => void;
@@ -31,6 +36,12 @@ type HomeScreenProps = AppScreenProps & {
 
 type HomeHeaderProps = {
   onOpenSearch: () => void;
+};
+
+type HomeRefreshIndicatorProps = {
+  pullY: Animated.Value;
+  refreshing: boolean;
+  spin: Animated.Value;
 };
 
 type ActionStatProps = {
@@ -81,6 +92,72 @@ type ClosingDigestProps = {
   onOpenPopup: (popupId: string) => void;
   onOpenSection: () => void;
 };
+
+const HOME_BOTTOM_NAV_OFFSET = 0;
+const HOME_REFRESH_DURATION_MS = 1100;
+const HOME_SCROLL_CONTENT_CONTAINER_STYLE = { paddingBottom: 132 } as const;
+
+function HomeRefreshIndicator({
+  pullY,
+  refreshing,
+  spin,
+}: HomeRefreshIndicatorProps) {
+  const pullOpacity = pullY.interpolate({
+    inputRange: [-110, -34, 0],
+    outputRange: [1, 0.62, 0],
+    extrapolate: "clamp",
+  });
+  const pullTranslateY = pullY.interpolate({
+    inputRange: [-130, -64, 0],
+    outputRange: [74, 36, -8],
+    extrapolate: "clamp",
+  });
+  const pullRotate = pullY.interpolate({
+    inputRange: [-130, 0],
+    outputRange: ["-360deg", "0deg"],
+    extrapolate: "clamp",
+  });
+  const spinRotate = spin.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0deg", "360deg"],
+  });
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      className="absolute left-0 right-0 top-16 z-30 items-center"
+      style={{
+        opacity: refreshing ? 1 : pullOpacity,
+        transform: [
+          { translateY: refreshing ? 46 : pullTranslateY },
+          { rotate: refreshing ? spinRotate : pullRotate },
+        ],
+      }}
+    >
+      <View
+        className="h-12 w-12 items-center justify-center rounded-full border border-white/50 bg-white/95"
+        style={{
+          shadowColor: COLORS.primaryShadow,
+          shadowOffset: { width: 0, height: 8 },
+          shadowOpacity: 1,
+          shadowRadius: 18,
+          elevation: 10,
+        }}
+      >
+        <Ionicons name="refresh" size={23} color={COLORS.primary} />
+      </View>
+    </Animated.View>
+  );
+}
+
+function HomePullBackdrop() {
+  return (
+    <View
+      pointerEvents="none"
+      className="absolute left-0 right-0 top-0 h-[620px] bg-heading"
+    />
+  );
+}
 
 function HomeHeader({ onOpenSearch }: HomeHeaderProps) {
   return (
@@ -613,24 +690,98 @@ export default function HomeScreen({
   onOpenSearch,
   onOpenSubmission,
 }: HomeScreenProps) {
-  const feed = getHomeFeed();
+  const feed = useMemo(() => getHomeFeed(), []);
   const heroPopup = feed.trendingPopups[0];
+  const pullY = useRef(new Animated.Value(0)).current;
+  const refreshTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const refreshSpin = useRef(new Animated.Value(0)).current;
+  const [refreshing, setRefreshing] = useState(false);
   const {
     isPopupReminderEnabled,
     isPopupSaved,
     togglePopupReminder,
     toggleSavedPopup,
   } = useHomeFeature();
+  const {
+    resetEvent,
+    status: tabEventStatus,
+    targetTab: tabEventTargetTab,
+  } = useTabEvent();
+  const isTabEventBubbleVisible =
+    tabEventStatus === "bubble" && activeTab !== tabEventTargetTab;
 
-  const allHomePopups = [
-    ...feed.trendingPopups,
-    ...feed.comingSoonPopups,
-    ...feed.closingSoonPopups,
-  ];
-  const savedPopups = allHomePopups.filter((popup) => isPopupSaved(popup.id));
+  useEffect(
+    () => () => {
+      if (refreshTimeoutRef.current) {
+        clearTimeout(refreshTimeoutRef.current);
+      }
+    },
+    []
+  );
+
+  useEffect(() => {
+    if (!refreshing) {
+      refreshSpin.stopAnimation();
+      refreshSpin.setValue(0);
+      return undefined;
+    }
+
+    refreshSpin.setValue(0);
+    const spinAnimation = Animated.loop(
+      Animated.timing(refreshSpin, {
+        toValue: 1,
+        duration: 700,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    );
+
+    spinAnimation.start();
+
+    return () => spinAnimation.stop();
+  }, [refreshSpin, refreshing]);
+
+  const handleRefresh = useCallback(() => {
+    if (refreshTimeoutRef.current) {
+      clearTimeout(refreshTimeoutRef.current);
+    }
+
+    setRefreshing(true);
+    refreshTimeoutRef.current = setTimeout(() => {
+      if (DEBUG_FLAGS.resetTabEventOnHomeRefresh) {
+        resetEvent();
+      }
+
+      setRefreshing(false);
+      refreshTimeoutRef.current = null;
+    }, HOME_REFRESH_DURATION_MS);
+  }, [resetEvent]);
+
+  const handleHomeScroll = useMemo(
+    () =>
+      Animated.event([{ nativeEvent: { contentOffset: { y: pullY } } }], {
+        useNativeDriver: true,
+      }),
+    [pullY]
+  );
+
+  const allHomePopups = useMemo(
+    () => [
+      ...feed.trendingPopups,
+      ...feed.comingSoonPopups,
+      ...feed.closingSoonPopups,
+    ],
+    [feed]
+  );
+  const savedPopups = useMemo(
+    () => allHomePopups.filter((popup) => isPopupSaved(popup.id)),
+    [allHomePopups, isPopupSaved]
+  );
   const savedPreview = savedPopups[0] ?? feed.trendingPopups[0];
-  const savedBoardItems =
-    savedPopups.length > 0 ? savedPopups : feed.trendingPopups;
+  const savedBoardItems = useMemo(
+    () => (savedPopups.length > 0 ? savedPopups : feed.trendingPopups),
+    [feed.trendingPopups, savedPopups]
+  );
   const comingSoonPreview = feed.comingSoonPopups[0];
   const closingSoonPreview = feed.closingSoonPopups[0];
   const savedCount = savedPopups.length;
@@ -639,16 +790,33 @@ export default function HomeScreen({
   const closingSoonCount = feed.closingSoonPopups.length;
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-heading">
+      <HomePullBackdrop />
+      <HomeRefreshIndicator
+        pullY={pullY}
+        refreshing={refreshing}
+        spin={refreshSpin}
+      />
       <StatusBar
         barStyle="light-content"
         backgroundColor="transparent"
         translucent
       />
 
-      <ScrollView
-        className="flex-1"
-        contentContainerStyle={{ paddingBottom: 132 }}
+      <Animated.ScrollView
+        className="flex-1 bg-transparent"
+        contentContainerStyle={HOME_SCROLL_CONTENT_CONTAINER_STYLE}
+        onScroll={handleHomeScroll}
+        refreshControl={
+          <RefreshControl
+            colors={[COLORS.primary]}
+            progressBackgroundColor={COLORS.surfaceStrong}
+            refreshing={refreshing}
+            tintColor="transparent"
+            onRefresh={handleRefresh}
+          />
+        }
+        scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
       >
         <ImageBackground
@@ -735,20 +903,26 @@ export default function HomeScreen({
             onOpenSection={() => onOpenPopupSection("closingSoon")}
           />
         </View>
-      </ScrollView>
+      </Animated.ScrollView>
 
-      <TouchableOpacity
-        activeOpacity={0.85}
-        onPress={onOpenSubmission}
-        accessibilityRole="button"
-        accessibilityLabel="새 팝업 제보 작성"
-        className="absolute bottom-24 right-5 z-20 min-h-12 flex-row items-center gap-2 rounded-[8px] bg-heading px-4"
-      >
-        <Ionicons name="add" size={18} color="white" />
-        <Text className="text-[14px] font-semibold text-white">제보</Text>
-      </TouchableOpacity>
+      {isTabEventBubbleVisible ? null : (
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={onOpenSubmission}
+          accessibilityRole="button"
+          accessibilityLabel="새 팝업 제보 작성"
+          className="absolute bottom-28 right-5 z-30 min-h-12 flex-row items-center gap-2 rounded-[8px] bg-heading px-4"
+        >
+          <Ionicons name="add" size={18} color="white" />
+          <Text className="text-[14px] font-semibold text-white">제보</Text>
+        </TouchableOpacity>
+      )}
 
-      <BottomNavBar activeTab={activeTab} onTabPress={onTabPress} />
+      <BottomNavBar
+        activeTab={activeTab}
+        bottomOffset={HOME_BOTTOM_NAV_OFFSET}
+        onTabPress={onTabPress}
+      />
     </View>
   );
 }

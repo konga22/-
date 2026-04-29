@@ -1,19 +1,34 @@
 import React, { useEffect, useMemo, useRef, type PropsWithChildren } from "react";
-import { Animated, Easing } from "react-native";
+import { Animated, Easing, View } from "react-native";
 import type { TabTransitionDirection } from "../../global/navigation/appRoutes";
 
 type TabScreenTransitionProps = PropsWithChildren<{
   direction: TabTransitionDirection;
 }>;
 
-const TAB_SCREEN_TRANSITION_DISTANCE = 34;
-const TAB_SCREEN_TRANSITION_DURATION_MS = 220;
+const TAB_SCREEN_TRANSITION_DISTANCE = 18;
+const TAB_SCREEN_TRANSITION_DURATION_MS = 120;
 
 export default function TabScreenTransition({
   children,
   direction,
 }: TabScreenTransitionProps) {
-  const entry = useRef(new Animated.Value(direction === "none" ? 1 : 0)).current;
+  if (direction === "none") {
+    return <View className="flex-1">{children}</View>;
+  }
+
+  return (
+    <AnimatedTabScreenTransition direction={direction}>
+      {children}
+    </AnimatedTabScreenTransition>
+  );
+}
+
+function AnimatedTabScreenTransition({
+  children,
+  direction,
+}: TabScreenTransitionProps) {
+  const entry = useRef(new Animated.Value(0)).current;
   const initialOffset =
     direction === "right"
       ? TAB_SCREEN_TRANSITION_DISTANCE
@@ -22,12 +37,7 @@ export default function TabScreenTransition({
         : 0;
 
   useEffect(() => {
-    entry.setValue(direction === "none" ? 1 : 0);
-
-    if (direction === "none") {
-      return undefined;
-    }
-
+    entry.setValue(0);
     const animation = Animated.timing(entry, {
       toValue: 1,
       duration: TAB_SCREEN_TRANSITION_DURATION_MS,
@@ -45,7 +55,7 @@ export default function TabScreenTransition({
       flex: 1,
       opacity: entry.interpolate({
         inputRange: [0, 1],
-        outputRange: [0.94, 1],
+        outputRange: [0.98, 1],
       }),
       transform: [
         {

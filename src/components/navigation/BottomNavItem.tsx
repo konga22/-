@@ -7,6 +7,7 @@ import { COLORS } from "../../constants/colors";
 
 type BottomNavItemProps = {
   activeTab: TabName;
+  hasEventDot?: boolean;
   item: TabConfigItem;
   onPress: (tab: TabName) => void;
   scale: Animated.Value;
@@ -14,6 +15,7 @@ type BottomNavItemProps = {
 
 export default function BottomNavItem({
   activeTab,
+  hasEventDot = false,
   item,
   onPress,
   scale,
@@ -28,31 +30,26 @@ export default function BottomNavItem({
       accessibilityLabel={`${item.label} 탭`}
       accessibilityState={{ selected: isActive }}
       hitSlop={{ bottom: 6, left: 4, right: 4, top: 6 }}
-      className="min-h-[58px] flex-1 items-center justify-center"
+      className="min-h-[68px] flex-1 items-center justify-start"
     >
-      <View className="h-[58px] w-full items-center justify-center px-0.5">
+      <View className="h-[68px] w-full items-center justify-start px-0.5 pt-1">
         <Animated.View
-          className={`h-[54px] w-full items-center justify-center rounded-[8px] px-1 py-1 ${
-            isActive ? "bg-heading" : "bg-transparent"
-          }`}
+          className="h-[58px] w-full items-center justify-start rounded-[10px] px-1 pt-1"
           style={{ transform: [{ scale }] }}
         >
-          <View
-            className={`mb-1 h-[3px] w-6 rounded-[2px] ${
-              isActive ? "bg-white" : "bg-transparent"
-            }`}
-            pointerEvents="none"
-          />
-          <View className="h-6 w-full items-center justify-center">
+          <View className="relative h-7 w-10 items-center justify-center">
             <Ionicons
               name={isActive ? item.activeIcon : item.icon}
-              size={22}
-              color={isActive ? "white" : COLORS.iconMuted}
+              size={25}
+              color={isActive ? COLORS.primary : COLORS.iconMuted}
             />
+            {hasEventDot ? (
+              <View className="absolute right-0 top-0 h-2.5 w-2.5 rounded-full bg-urgent" />
+            ) : null}
           </View>
           <Text
-            className={`mt-0.5 w-full text-center text-[11px] leading-[14px] ${
-              isActive ? "font-semibold text-white" : "text-muted"
+            className={`mt-1.5 w-full text-center text-[12px] leading-[15px] ${
+              isActive ? "font-semibold text-primary" : "text-icon-muted"
             }`}
             numberOfLines={1}
             adjustsFontSizeToFit
