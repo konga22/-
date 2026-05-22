@@ -16,6 +16,7 @@ class HomePage extends StatelessWidget {
   static const _surfaceAlt = Color(0xFFF0EDED);
   static const _border = Color(0xFFC6C6CB);
   static const _danger = Color(0xFFBA1A1A);
+  static const _bottomNavContentHeight = 66.0;
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +25,7 @@ class HomePage extends StatelessWidget {
       480,
     );
     final bottomInset = MediaQuery.paddingOf(context).bottom;
-    final navHeight = 102.0 + bottomInset;
+    final navHeight = _bottomNavContentHeight + bottomInset;
 
     return Scaffold(
       backgroundColor: _background,
@@ -740,7 +741,7 @@ class _FigmaBottomNav extends StatelessWidget {
         border: Border(top: BorderSide(color: HomePage._border)),
       ),
       child: Padding(
-        padding: EdgeInsets.only(top: 20.5, bottom: bottomInset),
+        padding: EdgeInsets.only(top: 6, bottom: bottomInset),
         child: Row(
           children: [
             _NavItem(
@@ -757,7 +758,6 @@ class _FigmaBottomNav extends StatelessWidget {
               icon: AppAssets.homeNavHome,
               label: '홈',
               active: true,
-              iconSize: 38,
               onTap: () => context.goNamed(AppPage.home.name),
             ),
             _NavItem(
@@ -767,7 +767,7 @@ class _FigmaBottomNav extends StatelessWidget {
             ),
             _NavItem(
               icon: AppAssets.homeNavProfile,
-              label: '프로필',
+              label: '마이페이지',
               onTap: () => context.goNamed(AppPage.profile.name),
             ),
           ],
@@ -783,14 +783,12 @@ class _NavItem extends StatelessWidget {
     required this.label,
     required this.onTap,
     this.active = false,
-    this.iconSize = 24,
   });
 
   final String icon;
   final String label;
   final VoidCallback onTap;
   final bool active;
-  final double iconSize;
 
   @override
   Widget build(BuildContext context) {
@@ -802,26 +800,23 @@ class _NavItem extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             SizedBox(
-              width: 44,
-              height: 34,
+              width: 40,
+              height: 28,
               child: Center(
-                child: SvgPicture.asset(
-                  icon,
-                  width: iconSize,
-                  height: iconSize,
-                ),
+                child: SvgPicture.asset(icon, width: 19, height: 19),
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 3),
             Text(
               label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 color: active ? HomePage._title : HomePage._navText,
-                fontSize: 10,
-                fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-                height: 15 / 10,
+                fontSize: 11,
+                fontWeight: FontWeight.w400,
+                height: 1.33,
+                letterSpacing: 0,
               ),
             ),
           ],
