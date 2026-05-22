@@ -71,13 +71,16 @@ class AppBottomNavBar extends StatelessWidget {
   const AppBottomNavBar({super.key, required this.activeTab});
 
   final AppTab activeTab;
+  static const _contentHeight = 66.0;
+  static const _iconSize = 19.0;
+  static const _labelSize = 11.0;
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       top: false,
       child: Container(
-        height: 84,
+        height: _contentHeight,
         decoration: const BoxDecoration(
           color: AppColors.surfaceAlt,
           border: Border(top: BorderSide(color: AppColors.border)),
@@ -96,19 +99,20 @@ class AppBottomNavBar extends StatelessWidget {
                       children: [
                         Icon(
                           tab.icon,
-                          size: 22,
+                          size: _iconSize,
                           color: isActive ? AppColors.ink : AppColors.muted,
                         ),
-                        6.heightBox,
+                        3.heightBox,
                         Text(
                           tab.label,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             color: isActive ? AppColors.ink : AppColors.muted,
-                            fontSize: 12,
-                            fontWeight:
-                                isActive ? FontWeight.w700 : FontWeight.w500,
+                            fontSize: _labelSize,
+                            fontWeight: FontWeight.w400,
+                            height: 1.33,
+                            letterSpacing: 0,
                           ),
                         ),
                       ],
